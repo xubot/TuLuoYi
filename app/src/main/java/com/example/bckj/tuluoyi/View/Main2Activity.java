@@ -1,4 +1,4 @@
-package com.example.bckj.tuluoyi;
+package com.example.bckj.tuluoyi.View;
 
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -24,32 +24,67 @@ import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
-import com.baidu.location.Poi;
+import com.example.bckj.tuluoyi.Bean.AttractionsBean;
+import com.example.bckj.tuluoyi.Bean.DataBean;
+import com.example.bckj.tuluoyi.Bean.EngDataBean;
+import com.example.bckj.tuluoyi.R;
+import com.example.bckj.tuluoyi.p.PresenterLayer;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Main2Activity extends AppCompatActivity implements View.OnClickListener{
+public class Main2Activity extends AppCompatActivity implements View.OnClickListener,ActivityView{
     private SensorManager manager;
     private SensorListener listener = new SensorListener();
     private RelativeLayout rl;
     private List<TextView> tvList=new ArrayList<>();
+    //中文数据集合
+    private List<DataBean> dataBeanList=new ArrayList<>();
+    //英文数据集合
+    private List<EngDataBean> engDataBeanList=new ArrayList<>();
     private PopupWindow popupWindow;
     private View view;
     private boolean flag=true;
+    private double latitude;
+    private double longitude;
 
-
+    //定位的参数
     public LocationClient mLocationClient = null;
     public BDLocationListener myListener = new MyLocationListener();
+    private DataBean dataBean;
+    private EngDataBean engDataBean;
+    private TextView spotName;
+    private TextView size;
+    private TextView address;
+    private TextView detail;
+    private String lang;
+    private TextView language;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main2);
+
         rl = (RelativeLayout) this.findViewById(R.id.rl);
+
+        language = (TextView) findViewById(R.id.language);
+        language.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //得到textView的值
+                lang = language.getText().toString();
+                setChenk(lang);
+            }
+        });
+
+
+
+
+
+        //开启定位
         startLocation();
+        //设置pop
         setPop();
-        setChenk();
         //设置屏幕高亮
         rl.setKeepScreenOn(true);
         // 取得传感器管理器对象
@@ -98,96 +133,11 @@ public class Main2Activity extends AppCompatActivity implements View.OnClickList
     public class MyLocationListener implements BDLocationListener {
         @Override
         public void onReceiveLocation(BDLocation location) {
-            //获取定位结果
-            StringBuffer sb = new StringBuffer(256);
-            sb.append("time : ");
-            sb.append(location.getTime());    //获取定位时间
-
-            sb.append("\nerror code : ");
-            sb.append(location.getLocType());    //获取类型类型
-
-            sb.append("\nlatitude : ");
-            sb.append(location.getLatitude());    //获取纬度信息
-
-            sb.append("\nlontitude : ");
-            sb.append(location.getLongitude());    //获取经度信息
-            double latitude = location.getLatitude();
-            Log.d("zzz", latitude + "==" + location.getLongitude()+location.getCity());
-
-            sb.append("\nradius : ");
-            sb.append(location.getRadius());    //获取定位精准度
-
-            if (location.getLocType() == BDLocation.TypeGpsLocation){
-
-                // GPS定位结果
-                sb.append("\nspeed : ");
-                sb.append(location.getSpeed());    // 单位：公里每小时
-
-                sb.append("\nsatellite : ");
-                sb.append(location.getSatelliteNumber());    //获取卫星数
-
-                sb.append("\nheight : ");
-                sb.append(location.getAltitude());    //获取海拔高度信息，单位米
-
-                sb.append("\ndirection : ");
-                sb.append(location.getDirection());    //获取方向信息，单位度
-
-                sb.append("\naddr : ");
-                sb.append(location.getAddrStr());    //获取地址信息
-
-                sb.append("\ndescribe : ");
-                sb.append("gps定位成功");
-
-            } else if (location.getLocType() == BDLocation.TypeNetWorkLocation){
-
-                // 网络定位结果
-                sb.append("\naddr : ");
-                sb.append(location.getAddrStr());    //获取地址信息
-
-                sb.append("\noperationers : ");
-                sb.append(location.getOperators());    //获取运营商信息
-
-                sb.append("\ndescribe : ");
-                sb.append("网络定位成功");
-
-            } else if (location.getLocType() == BDLocation.TypeOffLineLocation) {
-
-                // 离线定位结果
-                sb.append("\ndescribe : ");
-                sb.append("离线定位成功，离线定位结果也是有效的");
-
-            } else if (location.getLocType() == BDLocation.TypeServerError) {
-
-                sb.append("\ndescribe : ");
-                sb.append("服务端网络定位失败，可以反馈IMEI号和大体定位时间到loc-bugs@baidu.com，会有人追查原因");
-
-            } else if (location.getLocType() == BDLocation.TypeNetWorkException) {
-
-                sb.append("\ndescribe : ");
-                sb.append("网络不同导致定位失败，请检查网络是否通畅");
-
-            } else if (location.getLocType() == BDLocation.TypeCriteriaException) {
-
-                sb.append("\ndescribe : ");
-                sb.append("无法获取有效定位依据导致定位失败，一般是由于手机的原因，处于飞行模式下一般会造成这种结果，可以试着重启手机");
-
-            }
-
-            sb.append("\nlocationdescribe : ");
-            sb.append(location.getLocationDescribe());    //位置语义化信息
-
-            final List<Poi> list = location.getPoiList();    // POI数据
-            if (list != null) {
-                sb.append("\npoilist size = : ");
-                sb.append(list.size());
-                for (Poi p : list) {
-                    sb.append("\npoi= : ");
-                    sb.append(p.getId() + " " + p.getName() + " " + p.getRank());
-                }
-            }
-            Log.i("BaiduLocationApiDem", sb.toString());
+            latitude = location.getLatitude();
+            longitude = location.getLongitude();
+            Log.d("zzz", latitude + "==" + longitude);
+            load();
         }
-
         @Override
         public void onConnectHotSpotMessage(String s, int i) {
 
@@ -198,12 +148,65 @@ public class Main2Activity extends AppCompatActivity implements View.OnClickList
     private void setPop() {
         //找到视图,作为popupWindow显示的视图
         view = View.inflate(this, R.layout.popview, null);
+        //景点名字
+        spotName = (TextView) view.findViewById(R.id.spotName);
+        //距离
+        size = (TextView) view.findViewById(R.id.size);
+        //地址
+        address = (TextView) view.findViewById(R.id.address);
+        detail = (TextView) view.findViewById(R.id.detail);
         //得到popupWindow,设置popupWindow显示的内容和宽高
         popupWindow = new PopupWindow(view, WindowManager.LayoutParams.MATCH_PARENT, 300);
         //设置popupWindow的背景,当前设置的是透明
         popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         //设置点击popupWindow外部,是否可以消失,如果想要消失,必须通过setBackgroundDrawable方法设置popupWindow的背景
         popupWindow.setOutsideTouchable(false);
+    }
+
+    //设置点击监听
+    @Override
+    public void onClick(View v) {
+        switch(v.getId()) {
+            case R.id.one:
+                //setAnimation();
+                popupWindow.showAtLocation(v, Gravity.BOTTOM,0, 0);
+                if(lang.equals("中文")){
+                    engPopData(0);
+                }else if(lang.equals("English")){
+                    popData(0);
+                }
+                break;
+            case R.id.twe:
+                //setAnimation();
+                popupWindow.showAtLocation(v, Gravity.BOTTOM,0, 0);
+                if(lang.equals("中文")){
+                    engPopData(1);
+                }else if(lang.equals("English")){
+                    popData(1);
+                }
+                break;
+            case R.id.three:
+                //setAnimation();
+                popupWindow.showAtLocation(v, Gravity.BOTTOM,0, 0);
+                if(lang.equals("中文")){
+                    engPopData(2);
+                }else if(lang.equals("English")){
+                    popData(2);
+                }
+                break;
+        }
+    }
+    //点击弹出的景点信息
+    private void popData(int num) {
+        spotName.setText("景点名： "+dataBeanList.get(num).getName());
+        size.setText("距离： "+dataBeanList.get(num).getDistance()+"");
+        address.setText("地址： "+dataBeanList.get(num).getAddress());
+    }
+    //点击弹出的景点信息
+    private void engPopData(int num) {
+        spotName.setText("景点名： "+engDataBeanList.get(num).getName_en());
+        size.setText("距离： "+dataBeanList.get(num).getDistance()+"");
+        address.setText("地址： "+engDataBeanList.get(num).getAddress_en());
     }
 
     //点击后向上平移动画
@@ -214,7 +217,7 @@ public class Main2Activity extends AppCompatActivity implements View.OnClickList
                     Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0);
             set.addAnimation(translate);
             set.setFillAfter(true);
-            rl.offsetTopAndBottom(-rl.getHeight() /5);
+            rl.offsetTopAndBottom(-rl.getHeight() /6);
             rl.startAnimation(set);
             //设置动画持续时间
             translate.setDuration(200);
@@ -223,34 +226,26 @@ public class Main2Activity extends AppCompatActivity implements View.OnClickList
     }
 
     //得到点击控件
-    private void setChenk() {
+    private void setChenk(String lang) {
         TextView one= (TextView) findViewById(R.id.one);
         TextView twe= (TextView) findViewById(R.id.twe);
         TextView three= (TextView) findViewById(R.id.three);
+        if(lang.equals("English")){
+            one.setText(dataBeanList.get(0).getName()+"\n"+dataBeanList.get(0).getOverall_rating()+"分");
+            twe.setText(dataBeanList.get(1).getName()+"\n"+dataBeanList.get(1).getOverall_rating()+"分");
+            three.setText(dataBeanList.get(2).getName()+"\n"+dataBeanList.get(2).getOverall_rating()+"分");
+            language.setText("中文");
+        }else if(lang.equals("中文")){
+            one.setText(engDataBeanList.get(0).getName_en()+"\n"+dataBeanList.get(0).getOverall_rating()+"分");
+            twe.setText(engDataBeanList.get(1).getName_en()+"\n"+dataBeanList.get(1).getOverall_rating()+"分");
+            three.setText(engDataBeanList.get(2).getName_en()+"\n"+dataBeanList.get(2).getOverall_rating()+"分");
+            language.setText("English");
+        }
         tvList.add(one);
         tvList.add(twe);
         tvList.add(three);
         for (TextView tvl:tvList){
             tvl.setOnClickListener(this);
-        }
-    }
-
-    //设置点击监听
-    @Override
-    public void onClick(View v) {
-        switch(v.getId()) {
-            case R.id.one:
-                setAnimation();
-                popupWindow.showAtLocation(v, Gravity.BOTTOM,0, 0);
-                break;
-            case R.id.twe:
-                setAnimation();
-                popupWindow.showAtLocation(v, Gravity.BOTTOM,0, 0);
-                break;
-            case R.id.three:
-                setAnimation();
-                popupWindow.showAtLocation(v, Gravity.BOTTOM,0, 0);
-                break;
         }
     }
 
@@ -296,4 +291,36 @@ public class Main2Activity extends AppCompatActivity implements View.OnClickList
         super.onPause();
     }
 
+    //得到P层数据的方法
+    public void load() {
+        PresenterLayer presenterLayer = new PresenterLayer();
+        presenterLayer.setViewLayer(this);
+        presenterLayer.getCity(latitude,longitude);
+        Log.d("zzz", "3" + latitude + "==" + longitude);
+    }
+    //得到请求的数据
+    @Override
+    public void attractions(AttractionsBean attractionsBean) {
+        Log.d("zzz", "4");
+        List<AttractionsBean.DataBean.ListBean> attractionsList = attractionsBean.getData().getList();
+        for(AttractionsBean.DataBean.ListBean al:attractionsList){
+            String address = al.getAddress();
+            String address_en = al.getAddress_en();
+            String name = al.getName();
+            String name_en = al.getName_en();
+            double distance = al.getDistance();
+            String overall_rating = al.getOverall_rating();
+            String detail_url = al.getDetail_url();
+            //中文景点信息
+            dataBean = new DataBean(name, address, distance, overall_rating,detail_url);
+            //英文景点信息
+            engDataBean = new EngDataBean(name_en, address_en, distance, overall_rating,detail_url);
+            dataBeanList.add(dataBean);
+            String overall_rating1 = dataBeanList.get(0).getOverall_rating();
+            engDataBeanList.add(engDataBean);
+            Log.d("zzz", "5"+"=="+dataBeanList.size()+""+"==="+overall_rating1);
+        }
+        //景点的点击
+        setChenk("");
+    }
 }

@@ -4,20 +4,27 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.bckj.tuluoyi.Main2Activity">
+    tools:context="com.example.bckj.tuluoyi.View.Main2Activity">
+
+    <TextView
+        android:id="@+id/language"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:textSize="20dp"
+        android:text="中文"/>
+
 
     <RelativeLayout
         android:id="@+id/rl"
+        android:layout_below="@id/language"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true">
+        android:layout_height="350dp">
         <ImageView
             android:id="@+id/centrality"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:src="@drawable/sp"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:background="@drawable/sp"
             android:layout_centerVertical="true"
             android:layout_centerHorizontal="true"/>
 
