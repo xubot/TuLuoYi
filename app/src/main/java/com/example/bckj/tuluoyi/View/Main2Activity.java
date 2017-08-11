@@ -1,5 +1,6 @@
 package com.example.bckj.tuluoyi.View;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.hardware.Sensor;
@@ -7,6 +8,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Gravity;
@@ -16,6 +18,8 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
 import android.view.animation.RotateAnimation;
 import android.view.animation.TranslateAnimation;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -24,10 +28,12 @@ import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
+import com.baidu.location.Poi;
 import com.example.bckj.tuluoyi.Bean.AttractionsBean;
 import com.example.bckj.tuluoyi.Bean.DataBean;
 import com.example.bckj.tuluoyi.Bean.EngDataBean;
 import com.example.bckj.tuluoyi.R;
+import com.example.bckj.tuluoyi.ShowActivity;
 import com.example.bckj.tuluoyi.p.PresenterLayer;
 
 import java.util.ArrayList;
@@ -59,32 +65,36 @@ public class Main2Activity extends AppCompatActivity implements View.OnClickList
     private TextView detail;
     private String lang;
     private TextView language;
+    private PopupWindow window;
+    private EditText origin;
+    private EditText destination;
+    private List<Poi> list;
+    private View inflate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main2);
-
+        //得到设置陀螺仪的控件
         rl = (RelativeLayout) this.findViewById(R.id.rl);
-
+        //得到语言控件
         language = (TextView) findViewById(R.id.language);
+        //切换点击事件
         language.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //得到textView的值
                 lang = language.getText().toString();
-                setChenk(lang);
+                setChenk1(lang);
             }
         });
 
-
-
-
-
         //开启定位
         startLocation();
-        //设置pop
+        //设置信息pop
         setPop();
+        //设置打车的弹出框
+        setCarPop();
         //设置屏幕高亮
         rl.setKeepScreenOn(true);
         // 取得传感器管理器对象
@@ -107,7 +117,7 @@ public class Main2Activity extends AppCompatActivity implements View.OnClickList
         //可选，默认高精度，设置定位模式，高精度，低功耗，仅设备
         option.setCoorType("bd09ll");
         //可选，默认gcj02，设置返回的定位结果坐标系
-        int span = 1000;
+        int span = 0;
         option.setScanSpan(span);
         //可选，默认0，即仅定位一次，设置发起定位请求的间隔需要大于等于1000ms才是有效的
         option.setIsNeedAddress(true);
@@ -133,9 +143,25 @@ public class Main2Activity extends AppCompatActivity implements View.OnClickList
     public class MyLocationListener implements BDLocationListener {
         @Override
         public void onReceiveLocation(BDLocation location) {
+            //得到经度值
             latitude = location.getLatitude();
+            //得到纬度值
             longitude = location.getLongitude();
-            Log.d("zzz", latitude + "==" + longitude);
+            //得到地址
+            String addrStr = location.getAddrStr();
+            Log.d("zzz", latitude + "==" + longitude+"=="+addrStr);
+            //得到Poi数据
+            list = location.getPoiList();
+            if (list != null) {
+                for (Poi p : list) {
+                    String id = p.getId();
+                    String name = p.getName();
+                    double rank = p.getRank();
+                    Log.d("zzz",id+"=="+name+""+rank);
+                }
+            }
+            origin.setText(list.get(2).getName());
+
             load();
         }
         @Override
@@ -144,7 +170,7 @@ public class Main2Activity extends AppCompatActivity implements View.OnClickList
         }
     }
 
-    //设置popupWindow
+    //设置景点信息的popupWindow
     private void setPop() {
         //找到视图,作为popupWindow显示的视图
         view = View.inflate(this, R.layout.popview, null);
@@ -156,57 +182,98 @@ public class Main2Activity extends AppCompatActivity implements View.OnClickList
         address = (TextView) view.findViewById(R.id.address);
         detail = (TextView) view.findViewById(R.id.detail);
         //得到popupWindow,设置popupWindow显示的内容和宽高
-        popupWindow = new PopupWindow(view, WindowManager.LayoutParams.MATCH_PARENT, 300);
+        popupWindow = new PopupWindow(view, WindowManager.LayoutParams.MATCH_PARENT,ActionBar.LayoutParams.WRAP_CONTENT);
         //设置popupWindow的背景,当前设置的是透明
         popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         //设置点击popupWindow外部,是否可以消失,如果想要消失,必须通过setBackgroundDrawable方法设置popupWindow的背景
-        popupWindow.setOutsideTouchable(false);
+        popupWindow.setOutsideTouchable(true);
+    }
+
+    //设置打车的popupWindow
+    private void setCarPop() {
+        //找到视图,作为popupWindow显示的视图
+        inflate = View.inflate(this, R.layout.carpopview, null);
+        //输入起点位置
+        origin = (EditText) inflate.findViewById(R.id.origin);
+        //输入终点位置
+        destination = (EditText) inflate.findViewById(R.id.destination);
+        //得到popupWindow,设置popupWindow显示的内容和宽高
+        window = new PopupWindow(inflate, WindowManager.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.WRAP_CONTENT);
+        //设置popupWindow的背景,当前设置的是透明
+        window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        //设置点击popupWindow外部,是否可以消失,如果想要消失,必须通过setBackgroundDrawable方法设置popupWindow的背景
+        window.setFocusable(true);
+        window.setOutsideTouchable(false);
     }
 
     //设置点击监听
     @Override
     public void onClick(View v) {
         switch(v.getId()) {
+            case R.id.centrality:
+                window.showAtLocation(inflate,Gravity.BOTTOM,0, 0);
+                break;
             case R.id.one:
+                String oneLg = language.getText().toString();
                 //setAnimation();
-                popupWindow.showAtLocation(v, Gravity.BOTTOM,0, 0);
-                if(lang.equals("中文")){
-                    engPopData(0);
-                }else if(lang.equals("English")){
+                popupWindow.showAtLocation(view,Gravity.BOTTOM,0, 0);
+                if(oneLg.equals("中文")){
                     popData(0);
+                }else if(oneLg.equals("English")){
+                    engPopData(0);
                 }
                 break;
             case R.id.twe:
+                String tweLg = language.getText().toString();
                 //setAnimation();
-                popupWindow.showAtLocation(v, Gravity.BOTTOM,0, 0);
-                if(lang.equals("中文")){
-                    engPopData(1);
-                }else if(lang.equals("English")){
+                popupWindow.showAtLocation(view, Gravity.BOTTOM,0, 0);
+                if(tweLg.equals("中文")){
                     popData(1);
+                }else if(tweLg.equals("English")){
+                    engPopData(1);
                 }
                 break;
             case R.id.three:
+                String threeLg = language.getText().toString();
                 //setAnimation();
-                popupWindow.showAtLocation(v, Gravity.BOTTOM,0, 0);
-                if(lang.equals("中文")){
-                    engPopData(2);
-                }else if(lang.equals("English")){
+                popupWindow.showAtLocation(view, Gravity.BOTTOM,0, 0);
+                if(threeLg.equals("中文")){
                     popData(2);
+                }else if(threeLg.equals("English")){
+                    engPopData(2);
                 }
                 break;
         }
     }
     //点击弹出的景点信息
-    private void popData(int num) {
+    private void popData(final int num) {
         spotName.setText("景点名： "+dataBeanList.get(num).getName());
         size.setText("距离： "+dataBeanList.get(num).getDistance()+"");
         address.setText("地址： "+dataBeanList.get(num).getAddress());
+        detail.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Main2Activity.this, ShowActivity.class);
+                String detail_url = dataBeanList.get(num).getDetail_url();
+                intent.putExtra("url", detail_url);
+                startActivity(intent);
+            }
+        });
     }
-    //点击弹出的景点信息
-    private void engPopData(int num) {
+    //点击弹出的英文景点信息
+    private void engPopData(final int num) {
         spotName.setText("景点名： "+engDataBeanList.get(num).getName_en());
         size.setText("距离： "+dataBeanList.get(num).getDistance()+"");
         address.setText("地址： "+engDataBeanList.get(num).getAddress_en());
+        detail.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Main2Activity.this, ShowActivity.class);
+                String detail_url = dataBeanList.get(num).getDetail_url();
+                intent.putExtra("url", detail_url);
+                startActivity(intent);
+            }
+        });
     }
 
     //点击后向上平移动画
@@ -226,7 +293,25 @@ public class Main2Activity extends AppCompatActivity implements View.OnClickList
     }
 
     //得到点击控件
-    private void setChenk(String lang) {
+    private void setChenk() {
+        TextView one= (TextView) findViewById(R.id.one);
+        TextView twe= (TextView) findViewById(R.id.twe);
+        TextView three= (TextView) findViewById(R.id.three);
+        ImageView centr= (ImageView) findViewById(R.id.centrality);
+        one.setText(dataBeanList.get(0).getName()+"\n"+dataBeanList.get(0).getOverall_rating()+"分");
+        twe.setText(dataBeanList.get(1).getName()+"\n"+dataBeanList.get(1).getOverall_rating()+"分");
+        three.setText(dataBeanList.get(2).getName()+"\n"+dataBeanList.get(2).getOverall_rating()+"分");
+        tvList.add(one);
+        tvList.add(twe);
+        tvList.add(three);
+        centr.setOnClickListener(this);
+        for (TextView tvl:tvList){
+            tvl.setOnClickListener(this);
+        }
+    }
+
+    //得到切换点击控件(切换模式)
+    private void setChenk1(String lang) {
         TextView one= (TextView) findViewById(R.id.one);
         TextView twe= (TextView) findViewById(R.id.twe);
         TextView three= (TextView) findViewById(R.id.three);
@@ -321,6 +406,6 @@ public class Main2Activity extends AppCompatActivity implements View.OnClickList
             Log.d("zzz", "5"+"=="+dataBeanList.size()+""+"==="+overall_rating1);
         }
         //景点的点击
-        setChenk("");
+        setChenk();
     }
 }

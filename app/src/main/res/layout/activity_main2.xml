@@ -5,15 +5,20 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.example.bckj.tuluoyi.View.Main2Activity">
+    <ImageView
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginLeft="10dp"
+        android:src="@drawable/sp"/>
 
     <TextView
         android:id="@+id/language"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
+        android:layout_marginRight="10dp"
+        android:layout_alignParentRight="true"
         android:textSize="20dp"
         android:text="中文"/>
-
 
     <RelativeLayout
         android:id="@+id/rl"
@@ -34,7 +39,6 @@
             android:layout_height="wrap_content"
             android:background="@drawable/sp"
             android:gravity="center"
-            android:text="徐博涛"
             android:layout_above="@+id/centrality"
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="40dp"/>
@@ -44,7 +48,6 @@
             android:layout_height="wrap_content"
             android:background="@drawable/sp"
             android:gravity="center"
-            android:text="徐博涛"
             android:layout_below="@+id/centrality"
             android:layout_alignLeft="@+id/one"
             android:layout_marginTop="40dp"/>
@@ -54,7 +57,6 @@
             android:layout_height="wrap_content"
             android:background="@drawable/sp"
             android:gravity="center"
-            android:text="徐博涛"
             android:layout_centerVertical="true"
             android:layout_toLeftOf="@+id/twe"
             android:layout_marginRight="40dp"/>
